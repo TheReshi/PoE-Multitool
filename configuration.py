@@ -1,7 +1,8 @@
 import configparser
 
 config = configparser.ConfigParser()
-coords = None
+inventory_coords = None
+stash_coords = None
 
 def save_config():
     with open('config.ini', 'w') as configfile:
