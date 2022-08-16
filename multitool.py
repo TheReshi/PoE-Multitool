@@ -1,26 +1,30 @@
 import configuration as cfg
 import math, time, keyboard, pyautogui
 import numpy as np
+from datetime import datetime
 
-pyautogui.PAUSE = 0.0125
-
+cfg.load_config()
+pyautogui.PAUSE = 1 / float(cfg.config["SETTINGS"]["click_speed"])
 
 def run():
     while True:
         time.sleep(0.01)
-        if keyboard.is_pressed('ctrl+' + cfg.config["SETTINGS"]["hotkey"]) or keyboard.is_pressed('ctrl+shift+' + cfg.config["SETTINGS"]["hotkey"]):
+        if keyboard.is_pressed('ctrl+' + cfg.config["SETTINGS"]["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+' + cfg.config["SETTINGS"]["stash_hotkey"]):
             current_pos = pyautogui.position()
             if in_stash_range(current_pos):
                 loadin(current_pos)
             else:
                 loadout(current_pos)
+        if keyboard.is_pressed('shift+' + cfg.config["SETTINGS"]["card_hotkey"]):
+            #minutes_diff = (datetime_end - datetime_start).total_seconds() / 60.0
+            drop_div_cards()
 
 
 def loadin(default_pos):
     current_block = get_closest_stash_block()
     current_block_number = cfg.stash_coords.index(current_block)
     for block in cfg.stash_coords[current_block_number:]:
-        if keyboard.is_pressed('ctrl+' + cfg.config["SETTINGS"]["hotkey"]) or keyboard.is_pressed('ctrl+shift+' + cfg.config["SETTINGS"]["hotkey"]):
+        if keyboard.is_pressed('ctrl+' + cfg.config["SETTINGS"]["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+' + cfg.config["SETTINGS"]["stash_hotkey"]):
             pyautogui.moveTo(block)
             pyautogui.click()
         else:
@@ -29,19 +33,36 @@ def loadin(default_pos):
     time.sleep(1)
 
 def loadout(default_pos):
+    if int(cfg.config["SETTINGS"]["safe_columns"]) * -5 != 0:
+        safe_columns = int(cfg.config["SETTINGS"]["safe_columns"]) * -5
+    else:
+        safe_columns = len(cfg.inventory_coords)
+
     if in_inv_range(default_pos):
         current_block = get_closest_inventory_block()
         current_block_number = cfg.inventory_coords.index(current_block)
     else:
         current_block_number = 0
-    for block in cfg.inventory_coords[current_block_number:]:
-        if keyboard.is_pressed('ctrl+' + cfg.config["SETTINGS"]["hotkey"]) or keyboard.is_pressed('ctrl+shift+' + cfg.config["SETTINGS"]["hotkey"]):
+    for block in cfg.inventory_coords[current_block_number:safe_columns]:
+        if keyboard.is_pressed('ctrl+' + cfg.config["SETTINGS"]["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+' + cfg.config["SETTINGS"]["stash_hotkey"]):
             pyautogui.moveTo(block)
             pyautogui.click()
         else:
             break
     pyautogui.moveTo(default_pos)
     time.sleep(1)
+
+
+def drop_div_cards():
+    card_pos = pyautogui.position()
+    pyautogui.moveTo(card_pos[0], card_pos[1], 0.025)
+    pyautogui.click(button='right')
+    time.sleep(0.05)
+    pyautogui.moveTo(cfg.inventory_coords[0][0] - 100, cfg.inventory_coords[0][1], 0.05)
+    pyautogui.click()
+    time.sleep(0.05)
+    pyautogui.moveTo(card_pos[0], card_pos[1])
+    return
 
 
 def get_closest_stash_block():
@@ -91,44 +112,6 @@ def in_inv_range(coords):
     return True
 
 
-def create_stash_coords():
-    stash_width = int(cfg.config["STASH"]["end_x"]) - int(cfg.config["STASH"]["start_x"])
-    stash_height = int(cfg.config["STASH"]["end_y"]) - int(cfg.config["STASH"]["start_y"])
-    step_x = stash_width / 48
-    step_y = stash_height / 48
-    coords = []
-    for i in range(1, 49, 2):
-        for j in range(1, 49, 2):
-            coords.append((round(int(cfg.config["STASH"]["start_x"]) + step_x * i), round(int(cfg.config["STASH"]["start_y"]) + step_y *  j)))
-
-    return coords
-
-
-def create_inventory_coords(safe_cols):
-    inv_width = int(cfg.config["INVENTORY"]["end_x"]) - int(cfg.config["INVENTORY"]["start_x"])
-    inv_height = int(cfg.config["INVENTORY"]["end_y"]) - int(cfg.config["INVENTORY"]["start_y"])
-    step_x = inv_width / 24
-    step_y = inv_height / 10
-    coords = []
-    for i in range(1, 25 - safe_cols * 2, 2):
-        for j in range(1, 11, 2):
-            coords.append((round(int(cfg.config["INVENTORY"]["start_x"]) + step_x * i), round(int(cfg.config["INVENTORY"]["start_y"]) + step_y *  j)))
-
-    return coords
-
-
-def debug(text):
-    if bool(cfg.config["SETTINGS"]["debug"]):
-        print(text)
-
-
 if __name__ == '__main__':
-    cfg.load_config()
-    cfg.inventory_coords = create_inventory_coords(int(cfg.config["SETTINGS"]["safe_columns"]))
-    cfg.stash_coords = create_stash_coords()
+    print("PoE Loadout is running.")
     run()
-    '''
-    debug(cfg.config["INVENTORY"]["start_x"])
-    cfg.config["INVENTORY"]["start_x"] = str(2000)
-    cfg.save_config()
-    '''
