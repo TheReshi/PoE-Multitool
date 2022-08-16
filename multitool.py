@@ -114,4 +114,6 @@ def in_inv_range(coords):
 
 if __name__ == '__main__':
     print("PoE Loadout is running.")
+    print("Stash Hotkey is: CTRL + " + cfg.config["SETTINGS"]["stash_hotkey"])
+    print("Divination Card Hotkey is: SHIFT + " + cfg.config["SETTINGS"]["card_hotkey"])
     run()
