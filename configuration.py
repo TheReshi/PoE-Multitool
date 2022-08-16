@@ -43,7 +43,7 @@ def load_config():
 def debug(text):
     global config
     try:
-        if bool(config["SETTINGS"]["debug"]):
+        if config["SETTINGS"]["debug"] == "True":
             print(text)
     except Exception:
         return

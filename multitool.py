@@ -1,7 +1,9 @@
+from operator import is_
+from tracemalloc import start
 import configuration as cfg
-import math, time, keyboard, pyautogui
+import kthread as kt
 import numpy as np
-from datetime import datetime
+import time, keyboard, pyautogui, sys, taskbar
 
 cfg.load_config()
 pyautogui.PAUSE = 1 / float(cfg.config["SETTINGS"]["click_speed"])
@@ -111,9 +113,21 @@ def in_inv_range(coords):
         return False
     return True
 
-
 if __name__ == '__main__':
+    tray_process = kt.KThread(target=taskbar.tray)
+    multitool_process = kt.KThread(target=run)
+    processes = [tray_process, multitool_process]
+    tray_process.start()
+    multitool_process.start()
     print("PoE Loadout is running.")
     print("Stash Hotkey is: CTRL + " + cfg.config["SETTINGS"]["stash_hotkey"])
     print("Divination Card Hotkey is: SHIFT + " + cfg.config["SETTINGS"]["card_hotkey"])
-    run()
+
+    while True:
+        if not tray_process.is_alive() or not multitool_process.is_alive():
+            if multitool_process.is_alive():
+                multitool_process.kill()
+            if tray_process.is_alive():
+                tray_process.kill()
+            sys.exit(1)
+        time.sleep(2)
