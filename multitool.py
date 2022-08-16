@@ -37,16 +37,18 @@ def loadin(default_pos):
 def loadout(default_pos):
     start_pos = 0
     end_pos = len(cfg.inventory_coords)
+    if cfg.config["SETTINGS"]["safe_columns_direction"].lower() == "left":
+        start_pos = int(cfg.config["SETTINGS"]["safe_columns"]) * 5
+    else:
+        end_pos = end_pos - int(cfg.config["SETTINGS"]["safe_columns"]) * 5
 
     if in_inv_range(default_pos):
         current_block = get_closest_inventory_block()
         current_block_number = cfg.inventory_coords.index(current_block)
         if cfg.config["SETTINGS"]["safe_columns_direction"].lower() == "left":
-            start_pos = int(cfg.config["SETTINGS"]["safe_columns"]) * 5
             if current_block_number <= start_pos:
                 current_block_number = start_pos
         else:
-            end_pos = end_pos - int(cfg.config["SETTINGS"]["safe_columns"]) * 5
             if current_block_number >= end_pos:
                 return
     else:
