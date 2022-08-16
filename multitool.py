@@ -35,17 +35,31 @@ def loadin(default_pos):
     time.sleep(1)
 
 def loadout(default_pos):
-    if int(cfg.config["SETTINGS"]["safe_columns"]) * -5 != 0:
-        safe_columns = int(cfg.config["SETTINGS"]["safe_columns"]) * -5
+    start_pos = 0
+    end_pos = len(cfg.inventory_coords)
+    if cfg.config["SETTINGS"]["safe_columns_direction"].lower() == "left":
+        start_pos = int(cfg.config["SETTINGS"]["safe_columns"]) * 5
     else:
-        safe_columns = len(cfg.inventory_coords)
+        end_pos = end_pos - int(cfg.config["SETTINGS"]["safe_columns"]) * 5
+    
+    # if int(cfg.config["SETTINGS"]["safe_columns"]) * -5 != 0:
+    #     safe_columns = int(cfg.config["SETTINGS"]["safe_columns"]) * -5
+    # else:
+    #     safe_columns = len(cfg.inventory_coords)
 
     if in_inv_range(default_pos):
         current_block = get_closest_inventory_block()
         current_block_number = cfg.inventory_coords.index(current_block)
+        if cfg.config["SETTINGS"]["safe_columns_direction"].lower() == "left":
+            if current_block_number <= start_pos:
+                current_block_number = start_pos
+        else:
+            if current_block_number >= end_pos:
+                return
     else:
-        current_block_number = 0
-    for block in cfg.inventory_coords[current_block_number:safe_columns]:
+        current_block_number = start_pos
+
+    for block in cfg.inventory_coords[current_block_number:end_pos]:
         if keyboard.is_pressed('ctrl+' + cfg.config["SETTINGS"]["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+' + cfg.config["SETTINGS"]["stash_hotkey"]):
             pyautogui.moveTo(block)
             pyautogui.click()
@@ -97,8 +111,8 @@ def get_closest_inventory_block():
 
 
 def in_stash_range(coords):
-    stash_start = (int(cfg.config["STASH"]["start_x"]), int(cfg.config["STASH"]["start_y"]))
-    stash_size = (int(cfg.config["STASH"]["end_x"]) - int(cfg.config["STASH"]["start_x"]), int(cfg.config["STASH"]["end_y"]) - int(cfg.config["STASH"]["start_y"]))
+    stash_start = (int(cfg.config["STASH"][f"start_x{cfg.inv_suffix}"]), int(cfg.config["STASH"][f"start_y{cfg.inv_suffix}"]))
+    stash_size = (int(cfg.config["STASH"][f"end_x{cfg.inv_suffix}"]) - int(cfg.config["STASH"][f"start_x{cfg.inv_suffix}"]), int(cfg.config["STASH"][f"end_y{cfg.inv_suffix}"]) - int(cfg.config["STASH"][f"start_y{cfg.inv_suffix}"]))
     if coords[0] not in range(stash_start[0], stash_start[0] + stash_size[0]) or coords[1] \
             not in range(stash_start[1], stash_start[1] + stash_size[1]):
         return False
@@ -106,8 +120,8 @@ def in_stash_range(coords):
 
 
 def in_inv_range(coords):
-    inventory_start = (int(cfg.config["INVENTORY"]["start_x"]), int(cfg.config["INVENTORY"]["start_y"]))
-    inventory_size = (int(cfg.config["INVENTORY"]["end_x"]) - int(cfg.config["INVENTORY"]["start_x"]), int(cfg.config["INVENTORY"]["end_y"]) - int(cfg.config["INVENTORY"]["start_y"]))
+    inventory_start = (int(cfg.config["INVENTORY"][f"start_x{cfg.inv_suffix}"]), int(cfg.config["INVENTORY"][f"start_y{cfg.inv_suffix}"]))
+    inventory_size = (int(cfg.config["INVENTORY"][f"end_x{cfg.inv_suffix}"]) - int(cfg.config["INVENTORY"][f"start_x{cfg.inv_suffix}"]), int(cfg.config["INVENTORY"][f"end_y{cfg.inv_suffix}"]) - int(cfg.config["INVENTORY"][f"start_y{cfg.inv_suffix}"]))
     if coords[0] not in range(inventory_start[0], inventory_start[0] + inventory_size[0]) or coords[1] \
             not in range(inventory_start[1], inventory_start[1] + inventory_size[1]):
         return False
