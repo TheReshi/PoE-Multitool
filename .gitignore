@@ -1,11 +1,9 @@
-__pycache__/configuration.cpython-310.pyc
-__pycache__/resources.cpython-310.pyc
-build/*
-dist/*
+__pycache__/
+build/
+dist/
+release/
 *.spec
 *.pyc
-version.txt
-run.exe
-PoE Multitool.zip
-release/config.ini
-release/tray.ico
+*.txt
+*.exe
+test*
