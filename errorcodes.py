@@ -1,0 +1,1 @@
+POE_NOT_RUNNING = 1
