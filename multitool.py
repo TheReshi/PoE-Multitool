@@ -5,6 +5,8 @@ import kthread as kt
 import numpy as np
 import time, keyboard, pyautogui, sys, taskbar
 
+#pyinstaller --onefile --windowed --icon tray.ico --version-file version.txt multitool.py
+
 SETTINGS = cfg.config["SETTINGS"]
 
 cfg.load_config()
@@ -14,13 +16,19 @@ pyautogui.PAUSE = 1 / float(SETTINGS["click_speed"])
 def run():
     while True:
         time.sleep(0.01)
+        if keyboard.is_pressed('ctrl+alt+' + SETTINGS["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+alt+' + SETTINGS["stash_hotkey"]):
+            current_pos = pyautogui.position()
+            if in_stash_range(current_pos):
+                h_loadin(current_pos)
+            else:
+                h_loadout(current_pos)
         if keyboard.is_pressed('ctrl+' + SETTINGS["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+' + SETTINGS["stash_hotkey"]):
             current_pos = pyautogui.position()
             if in_stash_range(current_pos):
                 loadin(current_pos)
             else:
                 loadout(current_pos)
-        if keyboard.is_pressed(SETTINGS["stash_hotkey"]):
+        if keyboard.is_pressed(SETTINGS["item_use_hotkey"]):
             current_pos = pyautogui.position()
             if in_stash_range(current_pos):
                 use_all_stash(current_pos)
@@ -36,6 +44,18 @@ def loadin(default_pos):
     current_block_number = cfg.stash_coords.index(current_block)
     for block in cfg.stash_coords[current_block_number:]:
         if keyboard.is_pressed('ctrl+' + SETTINGS["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+' + SETTINGS["stash_hotkey"]):
+            pyautogui.moveTo(block)
+            pyautogui.click()
+        else:
+            break
+    pyautogui.moveTo(default_pos)
+    time.sleep(1)
+
+def h_loadin(default_pos):
+    current_block = get_closest_h_stash_block()
+    current_block_number = cfg.h_stash_coords.index(current_block)
+    for block in cfg.h_stash_coords[current_block_number:]:
+        if keyboard.is_pressed('ctrl+alt+' + SETTINGS["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+alt+' + SETTINGS["stash_hotkey"]):
             pyautogui.moveTo(block)
             pyautogui.click()
         else:
@@ -111,6 +131,35 @@ def loadout(default_pos):
     pyautogui.moveTo(default_pos)
     time.sleep(1)
 
+def h_loadout(default_pos):
+    start_pos = 0
+    end_pos = len(cfg.h_inventory_coords)
+    if SETTINGS["safe_columns_direction"].lower() == "left":
+        start_pos = int(SETTINGS["safe_columns"]) * 5
+    else:
+        end_pos = end_pos - int(SETTINGS["safe_columns"]) * 5
+
+    if in_inv_range(default_pos):
+        current_block = get_closest_h_inventory_block()
+        current_block_number = cfg.h_inventory_coords.index(current_block)
+        if SETTINGS["safe_columns_direction"].lower() == "left":
+            if current_block_number <= start_pos:
+                current_block_number = start_pos
+        else:
+            if current_block_number >= end_pos:
+                return
+    else:
+        current_block_number = start_pos
+
+    for block in cfg.h_inventory_coords[current_block_number:end_pos]:
+        if keyboard.is_pressed('ctrl+alt+' + SETTINGS["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+alt+' + SETTINGS["stash_hotkey"]):
+            pyautogui.moveTo(block)
+            pyautogui.click()
+        else:
+            break
+    pyautogui.moveTo(default_pos)
+    time.sleep(1)
+
 
 def drop_div_cards():
     card_pos = pyautogui.position()
@@ -136,6 +185,18 @@ def get_closest_stash_block():
 
     return closest_block
 
+def get_closest_h_stash_block():
+    current_pos = pyautogui.position()
+
+    xy = np.array(cfg.h_stash_coords).T
+    # Euclidean distance
+    d = ((xy[0] - current_pos[0]) ** 2 + (xy[1] - current_pos[1]) ** 2) ** 0.5
+
+    closest_idx = np.argmin(d)
+    closest_block = cfg.h_stash_coords[closest_idx]
+
+    return closest_block
+
 
 def get_closest_inventory_block():
     current_pos = pyautogui.position()
@@ -149,6 +210,21 @@ def get_closest_inventory_block():
 
     closest_idx = np.argmin(d)
     closest_block = cfg.inventory_coords[closest_idx]
+
+    return closest_block
+
+def get_closest_h_inventory_block():
+    current_pos = pyautogui.position()
+
+    if not in_inv_range(current_pos):
+        cfg.h_inventory_coords[0]
+
+    xy = np.array(cfg.h_inventory_coords).T
+    # Euclidean distance
+    d = ((xy[0] - current_pos[0]) ** 2 + (xy[1] - current_pos[1]) ** 2) ** 0.5
+
+    closest_idx = np.argmin(d)
+    closest_block = cfg.h_inventory_coords[closest_idx]
 
     return closest_block
 
