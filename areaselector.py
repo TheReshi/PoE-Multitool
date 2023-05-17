@@ -17,17 +17,23 @@ class SelectableFrame(wx.Frame):
         self.SetCursor(wx.Cursor(wx.CURSOR_CROSS))
         self.SetWindowStyle(wx.STAY_ON_TOP)
 
-        self.text_canvas = wx.StaticText(self, id, "Select an area while holding down LEFT mouse button.", (0, 300), wx.DisplaySize(), wx.ALIGN_CENTER)
-        self.text_canvas.SetFont(wx.Font(26, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
-        self.text_canvas.SetForegroundColour((255, 0, 0, 0))
+        # self.text_canvas = wx.StaticText(self, id, "Select an area while holding down LEFT mouse button.", (0, 300), wx.DisplaySize(), wx.ALIGN_CENTER)
+        # self.text_canvas.SetFont(wx.Font(26, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
+        # self.text_canvas.SetForegroundColour((255, 0, 0, 0))
 
-        self.text_canvas.Bind(wx.EVT_MOTION, self.OnMouseMove)
-        self.text_canvas.Bind(wx.EVT_LEFT_DOWN, self.OnMouseDown)
-        self.text_canvas.Bind(wx.EVT_LEFT_UP, self.OnMouseUp)
-        self.text_canvas.Bind(wx.EVT_PAINT, self.OnPaint)
+        # self.text_canvas.Bind(wx.EVT_MOTION, self.OnMouseMove)
+        # self.text_canvas.Bind(wx.EVT_LEFT_DOWN, self.OnMouseDown)
+        # self.text_canvas.Bind(wx.EVT_LEFT_UP, self.OnMouseUp)
+        # self.text_canvas.Bind(wx.EVT_PAINT, self.OnPaint)
+        # self.Bind(wx.EVT_CHAR_HOOK, self.OnKey)
+
+        self.Bind(wx.EVT_MOTION, self.OnMouseMove)
+        self.Bind(wx.EVT_LEFT_DOWN, self.OnMouseDown)
+        self.Bind(wx.EVT_LEFT_UP, self.OnMouseUp)
+        self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_CHAR_HOOK, self.OnKey)
 
-        self.SetTransparent(200)
+        self.SetTransparent(150)
 
     def OnKey(self, event):
         print("Key pressed!")
@@ -52,7 +58,8 @@ class SelectableFrame(wx.Frame):
         global selectionOffset, selectionSize
         if self.c1 is None or self.c2 is None: return
 
-        dc = wx.PaintDC(self.text_canvas)
+        # dc = wx.PaintDC(self.text_canvas)
+        dc = wx.PaintDC(self)
         dc.SetPen(wx.Pen('black', 5))
         dc.SetBrush(wx.Brush(wx.Colour(255, 255, 255)))
 
@@ -60,15 +67,11 @@ class SelectableFrame(wx.Frame):
         selectionOffset = (self.c1.x, self.c1.y)
         selectionSize = (abs(self.c2.x - self.c1.x), abs(self.c2.y - self.c1.y))
 
-    def PrintPosition(self, pos):
-        return str(pos.x) + "x" + str(pos.y)
-
 class MyApp(wx.App):
 
     def OnInit(self):
         self.frame = SelectableFrame()
         self.frame.Show()
-        print(self.frame.HasFocus())
         return True
 
 def set_foreground_window(title, winclass = None):

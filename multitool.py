@@ -5,19 +5,28 @@ import kthread as kt
 import numpy as np
 import time, keyboard, pyautogui, sys, taskbar
 
+SETTINGS = cfg.config["SETTINGS"]
+
 cfg.load_config()
-pyautogui.PAUSE = 1 / float(cfg.config["SETTINGS"]["click_speed"])
+pyautogui.PAUSE = 1 / float(SETTINGS["click_speed"])
+
 
 def run():
     while True:
         time.sleep(0.01)
-        if keyboard.is_pressed('ctrl+' + cfg.config["SETTINGS"]["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+' + cfg.config["SETTINGS"]["stash_hotkey"]):
+        if keyboard.is_pressed('ctrl+' + SETTINGS["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+' + SETTINGS["stash_hotkey"]):
             current_pos = pyautogui.position()
             if in_stash_range(current_pos):
                 loadin(current_pos)
             else:
                 loadout(current_pos)
-        if keyboard.is_pressed('shift+' + cfg.config["SETTINGS"]["card_hotkey"]):
+        if keyboard.is_pressed(SETTINGS["stash_hotkey"]):
+            current_pos = pyautogui.position()
+            if in_stash_range(current_pos):
+                use_all_stash(current_pos)
+            else:
+                use_all_inv(current_pos)
+        if keyboard.is_pressed(SETTINGS["card_hotkey"]):
             #minutes_diff = (datetime_end - datetime_start).total_seconds() / 60.0
             drop_div_cards()
 
@@ -26,7 +35,7 @@ def loadin(default_pos):
     current_block = get_closest_stash_block()
     current_block_number = cfg.stash_coords.index(current_block)
     for block in cfg.stash_coords[current_block_number:]:
-        if keyboard.is_pressed('ctrl+' + cfg.config["SETTINGS"]["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+' + cfg.config["SETTINGS"]["stash_hotkey"]):
+        if keyboard.is_pressed('ctrl+' + SETTINGS["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+' + SETTINGS["stash_hotkey"]):
             pyautogui.moveTo(block)
             pyautogui.click()
         else:
@@ -34,18 +43,26 @@ def loadin(default_pos):
     pyautogui.moveTo(default_pos)
     time.sleep(1)
 
-def loadout(default_pos):
+def use_all_stash(default_pos):
+    current_block = get_closest_stash_block()
+    current_block_number = cfg.stash_coords.index(current_block)
+    for block in cfg.stash_coords[current_block_number:]:
+        if keyboard.is_pressed(SETTINGS["stash_hotkey"]):
+            pyautogui.moveTo(block)
+            pyautogui.click(button=pyautogui.RIGHT)
+        else:
+            break
+    pyautogui.moveTo(default_pos)
+    time.sleep(1)
+
+def use_all_inv(default_pos):
     start_pos = 0
     end_pos = len(cfg.inventory_coords)
-    if cfg.config["SETTINGS"]["safe_columns_direction"].lower() == "left":
-        start_pos = int(cfg.config["SETTINGS"]["safe_columns"]) * 5
-    else:
-        end_pos = end_pos - int(cfg.config["SETTINGS"]["safe_columns"]) * 5
 
     if in_inv_range(default_pos):
         current_block = get_closest_inventory_block()
         current_block_number = cfg.inventory_coords.index(current_block)
-        if cfg.config["SETTINGS"]["safe_columns_direction"].lower() == "left":
+        if SETTINGS["safe_columns_direction"].lower() == "left":
             if current_block_number <= start_pos:
                 current_block_number = start_pos
         else:
@@ -55,7 +72,38 @@ def loadout(default_pos):
         current_block_number = start_pos
 
     for block in cfg.inventory_coords[current_block_number:end_pos]:
-        if keyboard.is_pressed('ctrl+' + cfg.config["SETTINGS"]["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+' + cfg.config["SETTINGS"]["stash_hotkey"]):
+        if keyboard.is_pressed(SETTINGS["stash_hotkey"]):
+            pyautogui.moveTo(block)
+            pyautogui.click(button=pyautogui.RIGHT)
+        else:
+            break
+
+    pyautogui.moveTo(default_pos)
+    time.sleep(1)
+
+
+def loadout(default_pos):
+    start_pos = 0
+    end_pos = len(cfg.inventory_coords)
+    if SETTINGS["safe_columns_direction"].lower() == "left":
+        start_pos = int(SETTINGS["safe_columns"]) * 5
+    else:
+        end_pos = end_pos - int(SETTINGS["safe_columns"]) * 5
+
+    if in_inv_range(default_pos):
+        current_block = get_closest_inventory_block()
+        current_block_number = cfg.inventory_coords.index(current_block)
+        if SETTINGS["safe_columns_direction"].lower() == "left":
+            if current_block_number <= start_pos:
+                current_block_number = start_pos
+        else:
+            if current_block_number >= end_pos:
+                return
+    else:
+        current_block_number = start_pos
+
+    for block in cfg.inventory_coords[current_block_number:end_pos]:
+        if keyboard.is_pressed('ctrl+' + SETTINGS["stash_hotkey"]) or keyboard.is_pressed('ctrl+shift+' + SETTINGS["stash_hotkey"]):
             pyautogui.moveTo(block)
             pyautogui.click()
         else:
@@ -129,8 +177,8 @@ if __name__ == '__main__':
     tray_process.start()
     multitool_process.start()
     print("PoE Loadout is running.")
-    print("Stash Hotkey is: CTRL + " + cfg.config["SETTINGS"]["stash_hotkey"])
-    print("Divination Card Hotkey is: SHIFT + " + cfg.config["SETTINGS"]["card_hotkey"])
+    print("Stash Hotkey is: CTRL + " + SETTINGS["stash_hotkey"])
+    print("Divination Card Hotkey is: SHIFT + " + SETTINGS["card_hotkey"])
 
     while True:
         if not tray_process.is_alive() or not multitool_process.is_alive():
